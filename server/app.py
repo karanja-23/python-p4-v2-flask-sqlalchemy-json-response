@@ -12,7 +12,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 migrate = Migrate(app, db)
 db.init_app(app)
-
+app.json.compact = False
 
 @app.route('/')
 def index():
@@ -24,9 +24,27 @@ def index():
 
 @app.route('/demo_json')
 def demo_json():
-    pet_json = '{"id": 1, "name" : "Fido", "species" : "Dog"}'
-    return make_response(pet_json, 200)
+    pet = Pet.query.first()
+    pet_dict = {'id': pet.id,
+                'name': pet.name,
+                'species': pet.species
+                }
 
+    return make_response(pet_dict, 200)
+@app.route('/species/<string:species>')
 
+def pet_by_species(species):
+    pets=[]
+    for pet in Pet.query.filter_by(species=species).all():
+        pet_dict = {
+            'id':pet.id,
+            'name':pet.name
+        }
+        pets.append(pet_dict)
+    body= {
+        'count':len(pets),
+        'pets': pets
+    }
+    return make_response(body, 200)
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
